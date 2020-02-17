@@ -1,0 +1,7 @@
+{
+    "settings": {
+        "files.associations": {
+            "sstream": "cpp"
+        }
+    }
+}

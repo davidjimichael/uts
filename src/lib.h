@@ -30,6 +30,9 @@ std::string getexepath()
     // need to use ansi version (post-pend 'A') otherwise char* incompatible...
     return std::string(result, GetModuleFileNameA(NULL, result, MAX_PATH));
 }
+
+const std::string FAV_SEP = "\\\\";
+
 #endif
 #ifdef __linux__
 #include <unistd.h>
@@ -39,6 +42,9 @@ std::string getexepath()
     ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
     return std::string(result, (count > 0) ? count : 0);
 }
+
+const std::string FAV_SEP = "/";
+
 #endif
 #ifdef __APPLE__
 // more to come

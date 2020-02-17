@@ -1,90 +1,46 @@
+#include <limits.h>
+#include <string>
+#include <windows.h>
+#include <algorithm>
+#include <sstream>
+#include <iterator>
 #include <vector>
 #include <cstdlib>
 #include <fstream>
 #include <stdio.h>
 #include <iostream>
-#include <string.h>
 
-std::string get_env_var(std::string const &key)
+/*
+    To handle request for portability here are the three main OS.
+    each '#ifdef', '#endif' pair corresponds to a different OS
+    and returns a method 'getexepath()' unique to that OS so
+    I can call getexepath freely elsewhere in my code.
+*/
+#ifdef _WIN32 // includes both x32 and x64
+std::string getexepath()
 {
-    char *val = getenv(key.c_str());
-    std::string retval = "";
-
-    if (val != NULL)
-    {
-        retval = val;
-    }
-
-    return retval;
+    char result[MAX_PATH];
+    // need to use ansi version (post-pend 'A') otherwise char* incompatible...
+    return std::string(result, GetModuleFileNameA(NULL, result, MAX_PATH));
 }
-
-// need to make output a string by yourself
-int file_write(std::string path, std::string output)
+#endif
+#ifdef __linux__
+#include <unistd.h>
+std::string getexepath()
 {
-    int has_error = 1; // negativity everywhere
-
-    std::ofstream stream;
-    stream.open(path);
-
-    if (stream.is_open())
-    {
-        stream << output << std::endl;
-        stream.close();
-        has_error = 0;
-    }
-    else
-    {
-        std::cerr << "\n\nstream cannot be found\n\n";
-    }
-
-    return has_error;
+    char result[PATH_MAX];
+    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+    return std::string(result, (count > 0) ? count : 0);
 }
-
-std::vector<std::string> get_env_all(char *arge[])
-{
-    std::vector<std::string> vec;
-
-    int i = 0;
-    while (arge[i] != NULL)
-    {
-        vec.push_back(arge[i]);
-        i++;
-    }
-
-    return vec;
-}
-
-// int possibly_print_working_directory()
-// {
-// #include <stdio.h> /* defines FILENAME_MAX */
-// #ifdef WINDOWS
-// #include <direct.h>
-// #define GetCurrentDir _getcwd
-// #else
-// #include <unistd.h>
-// #define GetCurrentDir getcwd
-// #endif
-
-//     char cCurrentPath[FILENAME_MAX];
-
-//     if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath)))
-//     {
-//         return errno;
-//     }
-
-//     cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
-
-//     printf("The current working directory is %s", cCurrentPath);
-// }
+#endif
+#ifdef __APPLE__
+// more to come
+#endif
 
 int main(int argc, char *argv[], char *arge[])
 {
-    std::vector<std::string> vec = get_env_all(arge);
-
-    for (int i = 0; i < vec.size(); i++)
-    {
-        std::cout << vec.at(i) << std::endl;
-    }
+    std::vector<std::string> env_args;
+    env_args.assign(arge, arge + 62);
 
     return 0;
 }

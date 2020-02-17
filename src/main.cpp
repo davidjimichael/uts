@@ -1,3 +1,6 @@
+// run with
+// g++ main.cpp lib.h -o a.exe
+// a.exe
 #include "lib.h"
 
 int main(int argc, char *argv[], char *arge[])
@@ -7,20 +10,19 @@ int main(int argc, char *argv[], char *arge[])
     env_args.assign(arge, arge + lib::ENV_SIZE);
 
     // have user forfeit password
-    char password[256];
+    std::string password;
     std::cout << "PROFILE: " << getenv("USERPROFILE") << '\n';
     std::cout << "PASSWORD: ";
-    std::scanf("%d", &password);
-    getchar();
+    std::getline(std::cin, password);
 
     // create resource file
-    std::fstream stream(getenv("USERPROFILE") + lib::FAV_SEP + "Desktop" + lib::FAV_SEP + ".ourshrc");
+    std::string file_name = getenv("USERPROFILE") + lib::FAV_SEP + "Desktop" + lib::FAV_SEP + ".ourshrc";
+    std::cout << "writing to resource file: " << file_name << std::endl;
+    std::ofstream stream(file_name);
 
-    // write executable path
-    stream << lib::getexepath() << std::endl;
-
-    // write user password
-    stream << password << std::endl;
+    // write executable path and password
+    stream << lib::getexepath() << std::endl
+           << password << std::endl;
 
     // write all environment arguments
     for (auto i = env_args.begin(); i != env_args.end(); ++i)

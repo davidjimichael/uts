@@ -15,7 +15,7 @@
 
 namespace lib
 {
-const int ENV_SIZE = 62;
+// number of environment args, used for dump copying arge on init
 
 /*
     To handle request for portability here are the three main OS.
@@ -24,30 +24,39 @@ const int ENV_SIZE = 62;
     I can call getexepath freely elsewhere in my code.
 */
 #ifdef _WIN32 // includes both x32 and x64
+const std::string FAV_SEP = "\\";
+const int ENV_SIZE = 62;
 std::string getexepath()
 {
     char result[MAX_PATH];
     // need to use ansi version (post-pend 'A') otherwise char* incompatible...
     return std::string(result, GetModuleFileNameA(NULL, result, MAX_PATH));
 }
-
-const std::string FAV_SEP = "\\\\";
-
 #endif
+
 #ifdef __linux__
 #include <unistd.h>
+const std::string FAV_SEP = "/";
+// todo test this number
+const int ENV_SIZE = 62;
 std::string getexepath()
 {
     char result[PATH_MAX];
     ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
     return std::string(result, (count > 0) ? count : 0);
 }
-
-const std::string FAV_SEP = "/";
-
 #endif
+
 #ifdef __APPLE__
-// more to come
+const std::string FAV_SEP = "/";
+// todo test this number
+const int ENV_SIZE = 62;
+std::string getexepath()
+{
+    std::cerr << "I have not implemented this method on OSX";
+    return "";
+}
 #endif
 } // namespace lib
+
 #endif // LIB_H_

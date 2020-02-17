@@ -44,5 +44,10 @@
             "xtr1common": "cpp",
             "xutility": "cpp"
         }
-    }
+    },
+    "folders": [
+        {
+            "path": "C:\\Users\\David Michael\\Documents\\uts"
+        }
+    ]
 }

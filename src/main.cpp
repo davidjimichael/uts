@@ -1,36 +1,27 @@
-// run with
-// g++ main.cpp lib.h -o a.exe
-// a.exe
 #include "lib.h"
 
 int main(int argc, char *argv[], char *arge[])
 {
-    // capture environment arguments
-    std::vector<std::string> env_args;
-    env_args.assign(arge, arge + lib::ENV_SIZE);
+    vector<string> resrc;
+    resrc.assign(arge, arge + ENV_SIZE);
 
-    // have user forfeit password
-    std::string password;
-    std::cout << "PROFILE: " << getenv("USERPROFILE") << '\n';
-    std::cout << "PASSWORD: ";
+    string password;
+    cout << "PROFILE: " << getenv("USERPROFILE") << endl
+         << "PASSWORD: ";
     std::getline(std::cin, password);
 
-    // create resource file
-    std::string file_name = getenv("USERPROFILE") + lib::FAV_SEP + "Desktop" + lib::FAV_SEP + ".ourshrc";
-    std::cout << "writing to resource file: " << file_name << std::endl;
-    std::ofstream stream(file_name);
+    resrc.push_back(get_exe_path());
+    resrc.push_back(password);
 
-    // write executable path and password
-    stream << lib::getexepath() << std::endl
-           << password << std::endl;
+    string file = getenv("USERPROFILE") + SEP + "Desktop" + SEP + ".ourshrc";
+    std::ofstream fout(file);
 
-    // write all environment arguments
-    for (auto i = env_args.begin(); i != env_args.end(); ++i)
+    for (auto i = resrc.begin(); i != resrc.end(); ++i)
     {
-        stream << *i << std::endl;
+        fout << *i << endl;
     }
 
-    stream.close();
+    fout.close();
 
     return 0;
 }

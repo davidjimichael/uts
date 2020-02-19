@@ -18,10 +18,6 @@ using std::endl;
 using std::string;
 using std::vector;
 
-using lib::ENV_SIZE;
-using lib::get_exe_path;
-using lib::SEP;
-
 namespace lib
 {
 #ifdef _WIN32 // includes both x32 and x64

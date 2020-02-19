@@ -8,10 +8,10 @@
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "C://Users//David Michael//Documents//uts//src//main.exe",
+            "program": "C://Users//David Michael//Documents//utsh//src//main.exe",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "C://Users//David Michael//Documents//uts//",
+            "cwd": "C://Users//David Michael//Documents//utsh//",
             "environment": [],
             "externalConsole": false
         }

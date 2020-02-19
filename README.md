@@ -26,8 +26,8 @@ Runs as follows
 2. Gets password from current user
 3. Creates the resource file and writes the following (in order) on new lines
 
+    - Environment Variables
     - Executable Path
     - User Password
-    - Environment Variables
 
 4. Closes file writing stream and exits.

@@ -9,12 +9,17 @@ int main(int argc, char **argv, char **arge)
         env_args.push_back(thisEnv);
     }
 
-    string password;
-    cout << "PROFILE: " << getenv("USERPROFILE") << endl
-         << "PASSWORD: ";
+    // Get username and password
+    std::string username;
+    std::string password;
+    std::cout << "PROFILE: ";
+    std::getline(std::cin, username);
+    std::cout << "PASSWORD: ";
     std::getline(std::cin, password);
+    std::cout << username << " " << password << std::endl;
 
     std::string file_name = getenv("USERPROFILE") + lib::FAV_SEP + "Desktop" + lib::FAV_SEP + ".ourshrc";
+    std::cout << file_name << std::endl;
 
     std::string line;
     std::ifstream fin(file_name);

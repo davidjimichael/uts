@@ -15,17 +15,9 @@
 
 namespace lib
 {
-// number of environment args, used for dump copying arge on init
-
-/*
-    To handle request for portability here are the three main OS.
-    each '#ifdef', '#endif' pair corresponds to a different OS
-    and returns a method 'getexepath()' unique to that OS so
-    I can call getexepath freely elsewhere in my code.
-*/
+// each '#ifdef', '#endif' pair corresponds to a different OS
 #ifdef _WIN32 // includes both x32 and x64
 const std::string FAV_SEP = "\\";
-const int ENV_SIZE = 62;
 std::string getexepath()
 {
     char result[MAX_PATH];
@@ -37,8 +29,6 @@ std::string getexepath()
 #ifdef __linux__
 #include <unistd.h>
 const std::string FAV_SEP = "/";
-// todo test this number
-const int ENV_SIZE = 62;
 std::string getexepath()
 {
     char result[PATH_MAX];
@@ -49,8 +39,6 @@ std::string getexepath()
 
 #ifdef __APPLE__
 const std::string FAV_SEP = "/";
-// todo test this number
-const int ENV_SIZE = 62;
 std::string getexepath()
 {
     std::cerr << "I have not implemented this method on OSX";

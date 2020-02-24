@@ -20,10 +20,10 @@ using std::vector;
 
 namespace lib
 {
+// each '#ifdef', '#endif' pair corresponds to a different OS
 #ifdef _WIN32 // includes both x32 and x64
-const std::string SEP = "\\";
-const int ENV_SIZE = 62;
-std::string get_exe_path()
+const std::string FAV_SEP = "\\";
+std::string getexepath()
 {
     char result[MAX_PATH];
     // need to use ansi version (post-pend 'A') otherwise char* incompatible...
@@ -33,10 +33,8 @@ std::string get_exe_path()
 
 #ifdef __linux__
 #include <unistd.h>
-const std::string SEP = "/";
-// todo test this number
-const int ENV_SIZE = 62;
-std::string get_exe_path()
+const std::string FAV_SEP = "/";
+std::string getexepath()
 {
     char result[PATH_MAX];
     ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
@@ -45,10 +43,8 @@ std::string get_exe_path()
 #endif
 
 #ifdef __APPLE__
-const std::string SEP = "/";
-// todo test this number
-const int ENV_SIZE = 62;
-std::string get_exe_path()
+const std::string FAV_SEP = "/";
+std::string getexepath()
 {
     std::cerr << "I have not implemented this method on OSX";
     return "";

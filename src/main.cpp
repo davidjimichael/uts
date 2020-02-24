@@ -1,27 +1,32 @@
 #include "lib.h"
 
-int main(int argc, char *argv[], char *arge[])
+int main(int argc, char **argv, char **arge)
 {
-    vector<string> resrc;
-    resrc.assign(arge, arge + lib::ENV_SIZE);
+    std::vector<std::string> env_args;
+    for (char **env = arge; *env != 0; env++)
+    {
+        char *thisEnv = *env;
+        env_args.push_back(thisEnv);
+    }
 
     string password;
     cout << "PROFILE: " << getenv("USERPROFILE") << endl
          << "PASSWORD: ";
     std::getline(std::cin, password);
 
-    resrc.push_back(lib::get_exe_path());
-    resrc.push_back(password);
+    std::string file_name = getenv("USERPROFILE") + lib::FAV_SEP + "Desktop" + lib::FAV_SEP + ".ourshrc";
 
-    string file = getenv("USERPROFILE") + lib::SEP + "Desktop" + lib::SEP + ".ourshrc";
-    std::ofstream fout(file);
+    std::string line;
+    std::ifstream fin(file_name);
 
-    for (auto i = resrc.begin(); i != resrc.end(); ++i)
+    if (fin.is_open())
     {
-        fout << *i << endl;
+        while (getline(fin, line))
+        {
+            std::cout << line << '\n';
+        }
+        fin.close();
     }
-
-    fout.close();
 
     return 0;
 }

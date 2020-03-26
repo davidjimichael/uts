@@ -57,6 +57,7 @@ int shcd(char **args)
 int shhelp(char **args)
 {
   int i;
+  
   printf("built-ins:\n");
 
   for (i = 0; i < lsh_num_builtins(); i++) {
@@ -70,17 +71,17 @@ int login() {
     char user[64];
     char pass[64];
     printf("username (='user'): ");
-    scanf("%s", &user);
+    scanf("%s64", user);
     printf("password (='pass'): ");
-    scanf("%s", &pass);
+    scanf("%s64", pass);
     fflush(stdin);
     
     if (strcmp(user, "user") == 0 && strcmp(pass, "pass") == 0) {
         return 0;
     }
+
     return -1;
 }
-
 
 void readFile(char *file) {
     char line[1024];
@@ -110,11 +111,10 @@ int cmdexec(char **argv) {
 
     if (c_pid == 0) {
         if (execvp(argv[0], argv) == -1) {
- 		perror("bad cmd");
-	}
+ 			perror("bad cmd");
+		}
         fflush(stdin);
-    }
-    else if (c_pid > 0) {
+    } else if (c_pid > 0) {
         if ((pid = wait(&status)) < 0) {
             perror("wait");
             _exit(1);
@@ -184,6 +184,5 @@ int main()
 {
     init();
     loop();
-    std::cout << "\n\n--- Goodbye ---\n\n\n";
 }
 

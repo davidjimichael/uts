@@ -44,14 +44,15 @@ int lsh_num_builtins() {
 int shcd(char **args)
 {
     if (args[1] == NULL) {
-        fprintf(stderr, "expected argument to \"cd\"\n");
+        // fprintf(stderr, "expected argument to \"cd\"\n");
+	chdir(std::getenv("HOME"));
     } else {
         if (chdir(args[1]) != 0) {
             perror("bad cd");
         }
     }
     
-    return 1;
+    returni 0;
 }
 
 int shhelp(char **args)
@@ -64,7 +65,7 @@ int shhelp(char **args)
     printf("  %s\n", builtin_str[i]);
   }
 
-  return 1;
+  return 0;
 }
 
 int login() {

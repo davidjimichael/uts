@@ -20,11 +20,13 @@ using std::pair;
 
 // easiest way to have env data
 map<string, string> env;
+map<string, string> aliases;
 vector<string> history;
 
 int shcd(char **args);
 int shhelp(char **args);
 int shhistory(char **args);
+int shaliases(char **args);
 
 int rfhistory(char **args);
 int rfconfig(char **args);
@@ -35,6 +37,7 @@ char *builtin_str[] =
     "cd",
     "help",
     "history",
+    "alias"
 };	
 
 char *rff_str[] =
@@ -49,6 +52,7 @@ int (*builtin_func[]) (char**) =
     &shcd,
     &shhelp,
     &shhistory,
+    &shaliases,
 };
 
 int (*read_file_funct[]) (char**) =
@@ -97,6 +101,45 @@ int shhelp(char **args)
     }
 
     return 0;
+}
+
+int shaliases(char **args)
+{
+	// 0_alias 1_alias_name 2_alias_cmd
+	
+	if (args[1] != NULL && args[2] != NULL && args[3] != NULL)
+	{
+		// err too many input arguments
+		std::cerr << "too many input args" << std::endl;
+		return 1;
+	}
+	else if (args[1] == NULL)
+	{
+		// print all aliases
+		for (auto iter = aliases.begin(); iter != aliases.end(); ++iter)
+		{
+			std::cout << "alias " << iter->first << " " << iter->second  << std::endl;
+		}
+	}
+	else if (args[1] != NULL && args[2] == NULL)
+	{
+		// print specific alias
+		std::cout << "alias " << args[1] << " " << aliases[args[1]] << std::endl;
+	}
+	else if (args[1] != NULL && args[2] != NULL)
+	{
+		// add alias to status
+		aliases[args[1]]=args[2];
+	}
+	else
+	{
+		// this should never get reached as far as I can tell...
+		// just tell them it error and exit
+		std::cerr << "bad aliases, try again" << std::endl;
+		return 1;
+	}
+
+	return 0;
 }
 
 int shhistory(char **args)
@@ -175,6 +218,7 @@ int rfconfig(char **args)
         }
         catch (std::exception e)
         {
+		std::cerr << "unable to parse config line " << args[i] << std::endl;
             return 1;
         }
     }
@@ -203,7 +247,7 @@ int readFile(char *file)
             lines[i++] = line;
         }
     } else {
-	    std::cerr << "unable to read file " << file << std::endl;
+	    std::cerr << " unable to read file got nullptr " << file << std::endl;
         return 1;
     }
 
@@ -216,10 +260,12 @@ int readFile(char *file)
             }
             catch (std::exception e)
             {
+		std::cerr << "executing read file for " << file  << std::endl;
                 return 1;
             }
         }
     }
+    return 0;
 }
 
 int init() 

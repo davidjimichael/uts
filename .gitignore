@@ -1,0 +1,9 @@
+# Ignore Compiled Objects
+./bin
+
+# Ignore previous versions and non needed cpps
+./src
+
+# Ignore config files and nonessential resource files for the shell
+.ourshrc
+.history

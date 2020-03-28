@@ -34,16 +34,16 @@ int rfconfig(char **args);
 // the keywords we will use for our builtin methods.
 char *builtin_str[] = 
 {
-    "cd",
-    "help",
-    "history",
-    "alias"
+ (char*)"cd",
+ (char*)"help",
+ (char*)"history",
+ (char*)"alias"
 };	
 
 char *rff_str[] =
 {
-    "config",
-    "history",
+   (char*)"config",
+   (char*)"history",
 };
 
 // array of funct pointers with string array input (builtin_str corresponding)
@@ -144,17 +144,17 @@ int shaliases(char **args)
 
 int shhistory(char **args)
 {	
-	int i;
 	int len;
 
 	if (args[1] == NULL) 
 	{
             len = history.size();
 	}
-        
+        else
+	{	
 	try
 	{
-		int val = atoi(args[i]);
+		int val = atoi(args[1]);
 	
 		if (isdigit(val) && 0 <= val && val <= history.size()) 
 		{
@@ -162,7 +162,7 @@ int shhistory(char **args)
 		}
 	       	else 
 		{
-			std::cerr << "Cannot parse history of size " << args[i] << std::endl;
+			std::cerr << "Cannot parse history of size " << args[1] << std::endl;
 			return 1;
 		}
 	}
@@ -170,7 +170,8 @@ int shhistory(char **args)
 	{
 		return 1;
 	}
-	
+	}
+	int i;
 	for (i = 0; i < len; i++) 
 	{
 	    try 
@@ -256,7 +257,8 @@ int readFile(char *file)
         if (strcmp(file, rff_str[j]) == 0) {
             try
             {
-                (*read_file_funct[j])(lines);
+                //(*read_file_funct[j])(lines);
+		    for (int k = 0; k != '\0'; k++) std::cout << lines[k] << " read from " << file << std::endl;
             }
             catch (std::exception e)
             {
@@ -271,11 +273,11 @@ int readFile(char *file)
 int init() 
 {
 //    if (login()) return 1;
-    if (readFile(".ourshrc") != 0) 
+    if (readFile((char*) ".ourshrc") != 0) 
     {
         std::cerr << "unable to read .ourshrc" << std::endl;
     }
-    if (readFile(".history") != 0)
+    if (readFile((char*) ".history") != 0)
     {
         std::cerr << "unable to read .history" << std::endl;
     }
@@ -326,19 +328,20 @@ void loop(void)
     {
         // prompt user, get input, clear and continue if empty
 	    printf("$ ");
-        memset(line, '\0', 1024);
-        fgets(line, 1024, stdin);
+        memset(line, '\0', MAXLINE);
+        fgets(line, MAXLINE, stdin);
         
         if ((argv[0] = strtok(line, " \n\t")) == nullptr) 
-		{
+	{
             continue;
         }
+	history.push_back(line);
 
-	    if (strcmp(argv[0], "exit") == 0) 
-		{
-		    running = false;
-		    continue;
-	    }
+	if (strcmp(argv[0], "exit") == 0) 
+	{
+	    running = false;
+	    _exit(1);
+       }
         
         // input other args
         argc = 1;
@@ -360,7 +363,6 @@ void loop(void)
             }
         }
 
-	    history.push_back(line);
         int e = 1;
         for (int i = 0; i < lsh_num_builtins(); i++) 
 		{

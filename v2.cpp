@@ -1,4 +1,5 @@
-#include<bits/stdc++.h>
+//#include<bits/stdc++.h>
+#include <fstream>
 #include <iostream>
 #include <unistd.h>
 #include <cstdlib>
@@ -7,6 +8,7 @@
 #include <map>
 #include <cstring>
 #include <string.h>
+#include <string>
 #include <vector>
 
 // simplicity and typing
@@ -28,11 +30,11 @@ int shhelp(char **args);
 int shhistory(char **args);
 int shaliases(char **args);
 
-int rfhistory(char **args);
+//int rfhistory(char *args);
 int rfconfig(char **args);
 
-int wfhistory(void);
-
+//int wfhistory(void);
+int fwhistory(char* file_name);
 // the keywords we will use for our builtin methods.
 char *builtin_str[] = 
 {
@@ -45,7 +47,7 @@ char *builtin_str[] =
 char *rff_str[] =
 {
    (char*)"config",
-   (char*)"history",
+   //(char*)"history",
 };
 
 // array of funct pointers with string array input (builtin_str corresponding)
@@ -59,7 +61,7 @@ int (*builtin_func[]) (char**) =
 
 int (*read_file_funct[]) (char**) =
 {
-    &rfhistory,
+    //&rfhistory,
     &rfconfig,
 };
 
@@ -209,10 +211,11 @@ int wfhistory(void)
 
 void wrapup(void)
 {
-	if (wfhistory() != 0)
-	{
-		std::cerr << "unable to write to .history" << std::endl;
-	}
+	fwhistory((char*) ".history");
+//	if (wfhistory() != 0)
+//	{
+//		std::cerr << "unable to write to .history" << std::endl;
+//	}
 }
 
 int login() 
@@ -300,17 +303,38 @@ int readFile(char *file)
     return 0;
 }
 
+int frhistory(char *file_name)
+{
+	std::ifstream fin(file_name);
+	for (std::string line; getline(fin,line);)
+	{
+		history.push_back(line);
+	}
+}
+
+int fwhistory(char *file_name)
+{
+	std::ofstream fout(file_name);
+	std::copy(history.rbegin(), history.rend(), std::ostream_iterator<int>(fout, "\n"));
+//	for (std::vector<std::string>::const_iterator i = history.begin(); i != history.end(); ++i)
+//	{
+//		fout << *i << '\n';
+//	}
+}
+					
+
 int init() 
 {
+	frhistory((char*) ".history");	
 //    if (login()) return 1;
     if (readFile((char*) ".ourshrc") != 0) 
     {
         std::cerr << "unable to read .ourshrc" << std::endl;
     }
-    if (readFile((char*) ".history") != 0)
-    {
-        std::cerr << "unable to read .history" << std::endl;
-    }
+//    if (readFile((char*) ".history") != 0)
+//    {
+//        std::cerr << "unable to read .history" << std::endl;
+//    }
 
     return 0;
 }

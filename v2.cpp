@@ -31,6 +31,8 @@ int shaliases(char **args);
 int rfhistory(char **args);
 int rfconfig(char **args);
 
+int wfhistory(void);
+
 // the keywords we will use for our builtin methods.
 char *builtin_str[] = 
 {
@@ -156,13 +158,13 @@ int shhistory(char **args)
 	{
 		int val = atoi(args[1]);
 	
-		if (isdigit(val) && 0 <= val && val <= history.size()) 
+		if (0 <= val && val <= history.size()) 
 		{
 			len = val;
 		}
 	       	else 
 		{
-			std::cerr << "Cannot parse history of size " << args[1] << std::endl;
+			std::cerr << "cannot parse history of size " << args[1] << std::endl;
 			return 1;
 		}
 	}
@@ -185,6 +187,32 @@ int shhistory(char **args)
 	}
 
 	return 0;
+}
+
+int wfhistory(void)
+{
+	try
+	{
+		std::ofstream hout((char*) ".history");
+		for (auto row : history)
+		{
+			hout << row << std::endl;
+		}
+		
+		return 0;
+	}
+	catch (std::exception e)
+	{
+		return 1;
+	}
+}
+
+void wrapup(void)
+{
+	if (wfhistory() != 0)
+	{
+		std::cerr << "unable to write to .history" << std::endl;
+	}
 }
 
 int login() 
@@ -229,6 +257,7 @@ int rfconfig(char **args)
 
 int rfhistory(char **args)
 {
+       	std::cout << "reading for history" << std::endl;
     for (unsigned int i=0; args[i] != NULL; i++) {
         history.push_back(args[i]);
     }
@@ -246,6 +275,7 @@ int readFile(char *file)
         while (fgets(line, 1024, ourshrc)) 
 	{
             lines[i++] = line;
+	    std::cout << "read line " << line << " from " << file << std::endl;
         }
     } else {
 	    std::cerr << " unable to read file got nullptr " << file << std::endl;
@@ -257,8 +287,8 @@ int readFile(char *file)
         if (strcmp(file, rff_str[j]) == 0) {
             try
             {
-                //(*read_file_funct[j])(lines);
-		    for (int k = 0; k != '\0'; k++) std::cout << lines[k] << " read from " << file << std::endl;
+                (*read_file_funct[j])(lines);
+		//    for (int k = 0; k != '\0'; k++) std::cout << lines[k] << " read from " << file << std::endl;
             }
             catch (std::exception e)
             {
@@ -327,7 +357,9 @@ void loop(void)
     while (running)
     {
         // prompt user, get input, clear and continue if empty
-	    printf("$ ");
+	    //printf("$ ");
+	std::cout << "$ ";
+	std::cout.flush();
         memset(line, '\0', MAXLINE);
         fgets(line, MAXLINE, stdin);
         
@@ -380,5 +412,5 @@ int main()
 {
     init();
     loop();
+    wrapup();
 }
-

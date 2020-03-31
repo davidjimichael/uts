@@ -29,6 +29,9 @@ int shhelp(char **args);
 int shhistory(char **args);
 int shaliases(char **args);
 int shunalias(char **args);
+int shprintenv(char **args);
+int shsetenv(char **args);
+int shunsetenv(char **args);
 
 // the keywords we will use for our builtin methods.
 char *builtin_str[] = 
@@ -38,6 +41,9 @@ char *builtin_str[] =
  (char*) "history",
  (char*) "alias",
  (char*) "unalias",
+ (char*) "printenv",
+ (char*) "setenv",
+ (char*) "unsetenv"
 };	
 
 // array of funct pointers with string array input (builtin_str corresponding)
@@ -48,6 +54,9 @@ int (*builtin_func[]) (char**) =
     &shhistory,
     &shaliases,
     &shunalias,
+    &shprintenv,
+    &shsetenv,
+    &shunsetenv
 };
 
 // for reusability when adding builtins, calc bytes of arr divide by pointer size in system
@@ -189,6 +198,12 @@ int shunalias(char** args)
 		return 1;
 	}
 }
+
+int shprintenv(char** args) {}
+
+int shsetenv(char** args) {}
+
+int shunsetenv(char** args) {}
 
 void wrapup(void)
 {

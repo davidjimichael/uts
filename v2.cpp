@@ -199,11 +199,59 @@ int shunalias(char** args)
 	}
 }
 
-int shprintenv(char** args) {}
+int shprintenv(char** args) 
+{
+	map<string, string>::iterator it;
+	
+	if (args[1] == NULL)
+	{
+		for (it = env.begin(); it != env.end(); ++it)
+		{
+			std::cout << it->first << "=" << it->second << std::endl;
+		}
+	}
+	else if (env.find(args[1]) == env.end())
+	{
+		std::cout << args[1] << "=" << env[args[1]] << std::endl;
+	}
+	else
+	{
+		std::cerr << "Unknown env variable " << args[1] << std::endl;
+	}
+}
 
-int shsetenv(char** args) {}
+int shsetenv(char** args) 
+{
+	char* envkey;
+	char* envval;
+	try
+	{
+		envkey = strtok(args[1], "=");
+		envval = strtok(NULL, "=");
+		env[envkey] = envval;
+		return 0;
+	}
+	catch (std::exception e)
+	{
+		std::cerr << "Cannot set " << envkey << " to " << envval << std::endl;
+		return 1;
+	}
 
-int shunsetenv(char** args) {}
+}
+
+int shunsetenv(char** args) 
+{
+	int unset = env.erase(args[1]);
+	if (unset)
+	{
+		return 0;
+	}
+	else
+	{
+		std::cerr << "Cannot find env " << args[1] << std::endl;
+		return 1;
+	}
+}
 
 void wrapup(void)
 {

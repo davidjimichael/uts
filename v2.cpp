@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <fstream>
 #include <iostream>
 #include <unistd.h>
@@ -257,9 +258,17 @@ void loop(void)
     int argc;
     bool running = true;
 
+    int og_fd0, og_fd1, og_fd2;
+    int fd0, fd1, fd2;
+    bool in = false, out = false, err = false;
+    char fin[64], fout[64], ferr[64];
 
     while (running)
     {
+	og_fd0 = dup(0);	
+	og_fd1 = dup(1);	
+	og_fd2 = dup(2);	
+
 	std::cout << "$ ";
 	std::cout.flush();
         memset(line, '\0', MAXLINE);
@@ -297,17 +306,105 @@ void loop(void)
                 }
             }
         }
-	
-        int e = 1;
-        for (int i = 0; i < lsh_num_builtins(); i++) 
+
+	// nullify redirect characters
+	for (int i = 0; argv[i] != NULL; i++)
+	{
+		if (strcmp(argv[i], "<") == 0)
 		{
-            if (strcmp(argv[0], builtin_str[i]) == 0) 
+			argv[i] = NULL; // remove redirect char
+			strcpy(fin, argv[i+1]); // copy input file to fin
+			in = true; // set input file descriptor to change later
+		}
+		if (strcmp(argv[i], ">") == 0)
+		{
+			argv[i] = NULL;
+			strcpy(fout, argv[i+1]);
+			out = true;
+		}
+		if (strcmp(argv[i], ">!") == 0)
+		{
+			argv[i] = NULL;
+			strcpy(ferr, argv[i+1]);
+			err = true;
+		}
+	}
+
+	pid_t c_pid, pid;
+	    int	status;
+
+	    c_pid = fork();
+
+	    if (c_pid == 0) {
+		// set file descriptors for ST{IN|OUT|ERR}_FILENO to redirects if present
+		if (in)
+		{
+			if ((fd0 = open(fin, O_RDONLY, 0)) < 0)
 			{
-                e = 0;
-                (*builtin_func[i])(argv);
-            }
-        }
-        if (e) cmdexec(argv);
+				std::cerr << "Cannot open input file " << fin << std::endl;
+			}
+			dup2(fd0, 0);
+			close(fd0);
+		}
+	
+		if (out)
+		{
+			if ((fd1 = creat(fout, O_RDWR | O_CREAT)) < 0)
+			{
+				std::cerr << "Cannot open output file " << fout << std::endl;
+			}
+			dup2(fd1, 1);
+			close(fd1);
+		}
+	
+		if (err)
+		{
+			if ((fd2 = creat(ferr, O_RDWR | O_CREAT)) < 0)
+			{
+				std::cerr << "Cannot open error output file " << ferr << std::endl;
+			}
+			dup2(fd2, 2);
+			close(fd2);
+		}
+		    } 
+	        int e = 1;
+	        for (int i = 0; i < lsh_num_builtins(); i++) 
+			{
+	            if (strcmp(argv[0], builtin_str[i]) == 0) 
+				{
+	                e = 0;
+	                (*builtin_func[i])(argv);
+	            }
+	        }
+	        if (e){
+		        if (execvp(argv[0], argv) == -1)
+				{
+		 			perror("bad cmd");
+				}
+		        fflush(stdin);
+	
+		} 
+	
+	
+			else if (c_pid > 0) 
+			{
+		        if ((pid = wait(&status)) < 0) 
+				{
+		            perror("wait");
+		            _exit(1);
+		        }
+		    } 
+			else 
+			{
+		        perror("bad fork");
+		        //_exit(1);
+	    }
+
+
+	
+	if (in) dup2(og_fd0, 0);
+	if (out) dup2(og_fd1, 1);
+	if (err) dup2(og_fd2, 2);
     }
 }
 

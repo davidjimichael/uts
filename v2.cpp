@@ -1,4 +1,3 @@
-//#include<bits/stdc++.h>
 #include <fstream>
 #include <iostream>
 #include <unistd.h>
@@ -29,26 +28,17 @@ int shcd(char **args);
 int shhelp(char **args);
 int shhistory(char **args);
 int shaliases(char **args);
+int shunalias(char **args);
 
-//int rfhistory(char *args);
-int rfconfig(char **args);
-
-//int wfhistory(void);
-int fwhistory(char* file_name);
 // the keywords we will use for our builtin methods.
 char *builtin_str[] = 
 {
- (char*)"cd",
- (char*)"help",
- (char*)"history",
- (char*)"alias"
+ (char*) "cd",
+ (char*) "help",
+ (char*) "history",
+ (char*) "alias",
+ (char*) "unalias",
 };	
-
-char *rff_str[] =
-{
-   (char*)"config",
-   //(char*)"history",
-};
 
 // array of funct pointers with string array input (builtin_str corresponding)
 int (*builtin_func[]) (char**) = 
@@ -57,12 +47,7 @@ int (*builtin_func[]) (char**) =
     &shhelp,
     &shhistory,
     &shaliases,
-};
-
-int (*read_file_funct[]) (char**) =
-{
-    //&rfhistory,
-    &rfconfig,
+    &shunalias,
 };
 
 // for reusability when adding builtins, calc bytes of arr divide by pointer size in system
@@ -70,11 +55,6 @@ int lsh_num_builtins()
 {
     return sizeof(builtin_str) / sizeof(char*);
 };
-
-int len_rff()
-{
-    return sizeof(rff_str) / sizeof(char*);
-}
 
 int shcd(char **args)
 {
@@ -137,7 +117,6 @@ int shaliases(char **args)
 	}
 	else
 	{
-		// this should never get reached as far as I can tell...
 		// just tell them it error and exit
 		std::cerr << "bad aliases, try again" << std::endl;
 		return 1;
@@ -160,9 +139,12 @@ int shhistory(char **args)
 	{
 		int val = atoi(args[1]);
 	
-		if (0 <= val && val <= history.size()) 
+		if (0 <= val)
 		{
-			len = val;
+			if (val < history.size())
+			{
+				len = val;
+			}
 		}
 	       	else 
 		{
@@ -180,7 +162,12 @@ int shhistory(char **args)
 	{
 	    try 
             {
-		std::cout << history.at(i) << std::endl;
+		    std::cout << history.at(i) << std::endl;
+
+//		for (string &cmd : history)
+//		{
+//		    std::cout << cmd << std::endl;
+//		}
 	    } 
 	    catch (std::exception e)
 	    {
@@ -191,31 +178,20 @@ int shhistory(char **args)
 	return 0;
 }
 
-int wfhistory(void)
+int shunalias(char** args)
 {
-	try
-	{
-		std::ofstream hout((char*) ".history");
-		for (auto row : history)
-		{
-			hout << row << std::endl;
-		}
-		
+	int erased = aliases.erase(args[1]);
+	
+	if (erased) {
 		return 0;
-	}
-	catch (std::exception e)
-	{
+	} else {
+		std::cerr << "Cannot find alias " << args[1] << std::endl;
 		return 1;
 	}
 }
 
 void wrapup(void)
 {
-	fwhistory((char*) ".history");
-//	if (wfhistory() != 0)
-//	{
-//		std::cerr << "unable to write to .history" << std::endl;
-//	}
 }
 
 int login() 
@@ -236,106 +212,10 @@ int login()
     return -1;
 }
 
-int rfconfig(char **args) 
-{
-    char *var[64];
-
-    for (unsigned int i=0; args[i] != NULL; i++) 
-    {
-        try
-        {
-            var[0] = strtok(args[i], " \n\t");
-            var[1] = strtok(nullptr, " \n\t");
-            env.insert(pair<string, string>(var[0], var[1]));
-        }
-        catch (std::exception e)
-        {
-		std::cerr << "unable to parse config line " << args[i] << std::endl;
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-int rfhistory(char **args)
-{
-       	std::cout << "reading for history" << std::endl;
-    for (unsigned int i=0; args[i] != NULL; i++) {
-        history.push_back(args[i]);
-    }
-}
-
-int readFile(char *file) 
-{
-    char line[1024];
-    char *lines[2048];
-    int i;
-
-    FILE *ourshrc;
-    if ((ourshrc = fopen(file, "r")) != nullptr) 
-    {
-        while (fgets(line, 1024, ourshrc)) 
-	{
-            lines[i++] = line;
-	    std::cout << "read line " << line << " from " << file << std::endl;
-        }
-    } else {
-	    std::cerr << " unable to read file got nullptr " << file << std::endl;
-        return 1;
-    }
-
-    int j;
-    for (j = 0; j < i; j++) {
-        if (strcmp(file, rff_str[j]) == 0) {
-            try
-            {
-                (*read_file_funct[j])(lines);
-		//    for (int k = 0; k != '\0'; k++) std::cout << lines[k] << " read from " << file << std::endl;
-            }
-            catch (std::exception e)
-            {
-		std::cerr << "executing read file for " << file  << std::endl;
-                return 1;
-            }
-        }
-    }
-    return 0;
-}
-
-int frhistory(char *file_name)
-{
-	std::ifstream fin(file_name);
-	for (std::string line; getline(fin,line);)
-	{
-		history.push_back(line);
-	}
-}
-
-int fwhistory(char *file_name)
-{
-	std::ofstream fout(file_name);
-	std::copy(history.rbegin(), history.rend(), std::ostream_iterator<int>(fout, "\n"));
-//	for (std::vector<std::string>::const_iterator i = history.begin(); i != history.end(); ++i)
-//	{
-//		fout << *i << '\n';
-//	}
-}
-					
 
 int init() 
 {
-	frhistory((char*) ".history");	
 //    if (login()) return 1;
-    if (readFile((char*) ".ourshrc") != 0) 
-    {
-        std::cerr << "unable to read .ourshrc" << std::endl;
-    }
-//    if (readFile((char*) ".history") != 0)
-//    {
-//        std::cerr << "unable to read .history" << std::endl;
-//    }
-
     return 0;
 }
 
@@ -380,8 +260,6 @@ void loop(void)
 
     while (running)
     {
-        // prompt user, get input, clear and continue if empty
-	    //printf("$ ");
 	std::cout << "$ ";
 	std::cout.flush();
         memset(line, '\0', MAXLINE);
@@ -391,19 +269,20 @@ void loop(void)
 	{
             continue;
         }
-	history.push_back(line);
-
+	history.push_back(argv[0]);
 	if (strcmp(argv[0], "exit") == 0) 
 	{
 	    running = false;
 	    _exit(1);
-       }
+        }
         
         // input other args
         argc = 1;
         while ((argv[argc] = strtok(nullptr, " \n\t")) != nullptr) 
-		{
-            argc++;
+	{
+	    history.back() += " ";
+	    history.back() += argv[argc];
+	    argc++;
         }
 
         // input env
@@ -411,14 +290,14 @@ void loop(void)
 		{
             if (argv[i][0] == '$') {
                 if (env.find(argv[i]) != env.end()) 
-				{
+		{
                     // append to arguments for passing to handle
                     argv[i] = const_cast<char *>(env.find(argv[i])->second.c_str());
 		            std::cout << "Set ENV: " << argv[i] << std::endl;
                 }
             }
         }
-
+	
         int e = 1;
         for (int i = 0; i < lsh_num_builtins(); i++) 
 		{

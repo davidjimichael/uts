@@ -6,7 +6,7 @@ Stands for University of Toledo Shell -- a project for my Advanced Systems Progr
 
 ## Running
 
-Link and Compile the program with `g++ main.cpp lib.h -o {myName}.exe` to produce an executable file name a.exe that can be then run with `{myName}.exe`.
+Link and Compile the program with `g++ main.cpp -o {myName}.exe` to produce an executable file name a.exe that can be then run with `./{myName}.exe`.
 
 ## Structure
 

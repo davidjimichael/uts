@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <fstream>
 #include <iostream>
 #include <unistd.h>
@@ -244,7 +245,7 @@ int shunsetenv(char **args)
     }
     else
     {
-        perror("Cannot find env " + args[1]);
+            std::cerr << "cannot find env variable " << args[1] << std::endl;
         return 1;
     }
 }
@@ -284,15 +285,79 @@ int init()
 int cmdexec(char **argv)
 {
     pid_t c_pid, pid;
-    int status;
+    int status = 0;
 
     c_pid = fork();
 
     if (c_pid == 0)
     {
+            fflush(0);
+	int og_fd0, og_fd1, og_fd2;
+	int fd0, fd1, fd2;
+	bool in = false, out = false, err = false;
+	char fin[64], fout[64], ferr[64];
+        og_fd0 = dup(0);
+        og_fd1 = dup(1);
+	og_fd2 = dup(2);
+        // nullify redirect characters
+	for (int i = 1; argv[i] != NULL; i++)
+	{
+		if (strcmp(argv[i], "<") == 0)
+		{
+			argv[i] = NULL; // remove redirect char
+			strcpy(fin, argv[i+1]); // copy input file to fin
+			in = true; // set input file descriptor to change later
+		}
+		if (strcmp(argv[i], ">") == 0)
+		{
+			argv[i] = NULL;
+			strcpy(fout, argv[i+1]);
+			out = true;
+		}
+		if (strcmp(argv[i], ">!") == 0)
+		{
+			argv[i] = NULL;
+			strcpy(ferr, argv[i+1]);
+			err = true;
+		}
+	}
+        // set file descriptors for ST{IN|OUT|ERR}_FILENO to redirects if present
+		if (in)
+		{
+			if ((fd0 = open(fin, O_RDONLY, 0)) < 0)
+			{
+				std::cerr << "Cannot open input file " << fin << std::endl;
+                                status = 1;
+			}
+			dup2(fd0, 0);
+			close(fd0);
+		}
+
+		if (out)
+		{
+			if ((fd1 = open(fout, O_RDWR | O_CREAT)) < 0)
+			{
+				std::cerr << "Cannot open output file " << fout << std::endl;
+                                status = 1;
+			}
+			dup2(fd1, 1);
+			close(fd1);
+		}
+
+		if (err)
+		{
+			if ((fd2 = open(ferr, O_RDWR | O_CREAT)) < 0)
+			{
+				std::cerr << "Cannot open error output file " << ferr << std::endl;
+                                status = 1;
+			}
+			dup2(fd2, 2);
+			close(fd2);
+		}
         if (execvp(argv[0], argv) == -1)
         {
-            perror("bad cmd");
+                std::cerr << "bad cmd " << std::endl;
+            status = 1;
         }
         fflush(stdin);
     }
@@ -300,16 +365,17 @@ int cmdexec(char **argv)
     {
         if ((pid = wait(&status)) < 0)
         {
-            perror("wait");
-            _exit(1);
+            perror("error waiting for child");
+            status = 1;
         }
     }
     else
     {
         perror("bad fork");
+        status = 1;
     }
-
-    return 0;
+    
+    return status;
 }
 
 void loop(void)
@@ -362,6 +428,10 @@ void loop(void)
             }
         }
 
+        fflush(stdin);
+        fflush(stdout);
+        fflush(stderr);
+
         int e = 1;
         for (int i = 0; i < lsh_num_builtins(); i++)
         {
@@ -373,7 +443,9 @@ void loop(void)
         }
         if (e)
         {
-            cmdexec(argv);
+            if (cmdexec(argv) != 0) {
+                    std::cerr << "unable to execute command " << line << std::endl;
+            }
         }
     }
 }

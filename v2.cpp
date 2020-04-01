@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+extern char** environ;
+
 // simplicity and typing
 using std::map;
 using std::pair;
@@ -23,6 +25,7 @@ using std::vector;
 map<string, string> env;
 map<string, string> aliases;
 vector<string> history;
+vector<string> config;
 
 int shcd(char **args);
 int shhelp(char **args);
@@ -99,6 +102,7 @@ int shcd(char **args)
     {
         if (chdir(args[1]) != 0)
         {
+		std::cerr << "No such directory " << args[1] << std::endl;
             return 1; // error status for a bad cd handle later todo
         }
     }
@@ -232,7 +236,7 @@ int shprintenv(char **args)
             std::cout << it->first << "=" << it->second << std::endl;
         }
     }
-    else if (env.find(args[1]) == env.end())
+    else if (env.find(args[1]) != env.end())
     {
         std::cout << args[1] << "=" << env[args[1]] << std::endl;
     }
@@ -270,7 +274,7 @@ int shunsetenv(char **args)
     }
     else
     {
-        perror("Cannot find env " + args[1]);
+	    std::cerr << "cannot find env name " << args[1] << std::endl;
         return 1;
     }
 }
@@ -301,10 +305,16 @@ int init()
 {
     // todo uncomment
     //    if (login() != 0) return 1;
-    // todo read config
     // todo read env
-//    if (login()) return 1;
-	getFileContent(".history", history);
+    int i = 0;
+    while (environ[i])
+    {
+	    char *genv[2] = {"setenv", environ[i++]};
+	    shsetenv(&(genv[0]));
+    }
+    // todo read config
+    getFileContent(".config", config);
+    getFileContent(".history", history);
     return 0;
 }
 
@@ -320,6 +330,8 @@ int cmdexec(char **argv)
         if (execvp(argv[0], argv) == -1)
         {
             perror("bad cmd");
+	    fflush(0);
+	    _exit(1);
         }
         fflush(stdin);
     }
@@ -328,6 +340,7 @@ int cmdexec(char **argv)
         if ((pid = wait(&status)) < 0)
         {
             perror("wait");
+	    fflush(0);
             _exit(1);
         }
     }
@@ -345,16 +358,25 @@ void loop(void)
     char *argv[MAXCMD];
     int argc;
     bool running = true;
+    int config_i = 0;
 
     while (running)
     {
-        std::cout << "$ ";
-        std::cout.flush();
-        memset(line, '\0', MAXLINE);
-        fgets(line, MAXLINE, stdin);
-
+	if (!config.empty()) { // config not fully loaded
+		strcpy(line, config.at(config_i).c_str());
+		std::cout << "loaded config " << line << std::endl;
+		config.erase(config.begin() + config_i++);
+	}
+	else
+	{	
+	        std::cout << "$ ";
+	        std::cout.flush();
+	        memset(line, '\0', MAXLINE);
+	        fgets(line, MAXLINE, stdin);
+	}
         if ((argv[0] = strtok(line, " \n\t")) == nullptr)
         {
+		std::cout << "unknown empty command" << std::endl;
             continue;
         }
 
@@ -380,11 +402,14 @@ void loop(void)
         {
             if (argv[i][0] == '$')
             {
+		// remove prepended $ from variable (allows search in the env)
+		    argv[i] = argv[i] + 1;
+
                 if (env.find(argv[i]) != env.end())
                 {
                     // append to arguments for passing to handle
                     argv[i] = const_cast<char *>(env.find(argv[i])->second.c_str());
-                    std::cout << "Set ENV: " << argv[i] << std::endl;
+                    std::cout << "Converted ENV: " << argv[i] << std::endl;
                 }
             }
         }

@@ -306,19 +306,25 @@ int cmdexec(char **argv)
 		{
 			argv[i] = NULL; // remove redirect char
 			strcpy(fin, argv[i+1]); // copy input file to fin
+                        argv[i+1] = NULL;
 			in = true; // set input file descriptor to change later
+                        std::cout << "set in " << std::endl;
 		}
 		if (strcmp(argv[i], ">") == 0)
 		{
 			argv[i] = NULL;
 			strcpy(fout, argv[i+1]);
+                        argv[i+1] = NULL;
 			out = true;
+                        std::cout << "set out " << fout <<  std::endl;
 		}
 		if (strcmp(argv[i], ">!") == 0)
 		{
 			argv[i] = NULL;
 			strcpy(ferr, argv[i+1]);
+                        argv[i+1] = NULL;
 			err = true;
+                        std::cout << "set err " << std::endl;
 		}
 	}
         // set file descriptors for ST{IN|OUT|ERR}_FILENO to redirects if present
@@ -329,18 +335,23 @@ int cmdexec(char **argv)
 				std::cerr << "Cannot open input file " << fin << std::endl;
                                 status = 1;
 			}
-			dup2(fd0, 0);
+			dup2(fd0, STDIN_FILENO);
 			close(fd0);
 		}
 
 		if (out)
 		{
-			if ((fd1 = open(fout, O_RDWR | O_CREAT)) < 0)
+			//if ((fd1 = open(fout, O_RDWR | O_CREAT)) < 0)
+                        if (false)
 			{
 				std::cerr << "Cannot open output file " << fout << std::endl;
                                 status = 1;
+                                std::cout << "cannot open output file" << std::endl;
 			}
-			dup2(fd1, 1);
+                        close(0);
+                        fd1 = creat(fout, 0644);
+                        dup(fd1);
+			//dup2(fd1, STDOUT_FILENO);
 			close(fd1);
 		}
 
@@ -351,7 +362,7 @@ int cmdexec(char **argv)
 				std::cerr << "Cannot open error output file " << ferr << std::endl;
                                 status = 1;
 			}
-			dup2(fd2, 2);
+			dup2(fd2, STDERR_FILENO);
 			close(fd2);
 		}
         if (execvp(argv[0], argv) == -1)
@@ -363,11 +374,12 @@ int cmdexec(char **argv)
     }
     else if (c_pid > 0)
     {
-        if ((pid = wait(&status)) < 0)
-        {
-            perror("error waiting for child");
-            status = 1;
-        }
+      waitpid(c_pid, 0, 0);
+//        if ((pid = wait(&status)) < 0)
+//        {
+//            perror("error waiting for child");
+//            status = 1;
+//        }
     }
     else
     {
